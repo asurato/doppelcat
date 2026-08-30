@@ -173,7 +173,7 @@ func drawText(screen tcell.Screen, x, y, width int, s string, color tcell.Color)
 	}
 }
 
-func (v *Viewer) Focus(delegate func(p tview.Primitive)) { delegate(v) }
+func (v *Viewer) Focus(delegate func(p tview.Primitive)) { v.Box.Focus(delegate) }
 func (v *Viewer) HasFocus() bool                         { return v.Box.HasFocus() }
 func (v *Viewer) InputHandler() func(*tcell.EventKey, func(tview.Primitive)) {
 	return v.WrapInputHandler(func(e *tcell.EventKey, setFocus func(tview.Primitive)) {

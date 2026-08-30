@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/asurato/doppelcat/internal/diff"
+	"github.com/asurato/doppelcat/internal/document"
 	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 func TestViewerDrawsDiffMarks(t *testing.T) {
@@ -53,5 +55,24 @@ func TestViewerKeepsLatestLogicalAnchor(t *testing.T) {
 	v.SetDiff(lines)
 	if got := v.TopLine(); got != 2 {
 		t.Fatalf("top logical line=%d", got)
+	}
+}
+
+func TestViewerFocusDoesNotDelegateToItself(t *testing.T) {
+	v := NewViewer()
+	v.Focus(func(tview.Primitive) { t.Fatal("Viewer must not delegate focus to itself") })
+	if !v.HasFocus() {
+		t.Fatal("viewer did not receive focus")
+	}
+}
+
+func TestNewInitializesViewerFocus(t *testing.T) {
+	s, err := document.Decode([]byte("test\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := New("test.txt", s)
+	if !u.viewer.HasFocus() {
+		t.Fatal("viewer did not receive initial focus")
 	}
 }
