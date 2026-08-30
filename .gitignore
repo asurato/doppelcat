@@ -1,0 +1,14 @@
+# Build outputs
+/doppelcat
+/doppelcat.exe
+*.test
+
+# Coverage and profiling
+coverage.out
+*.prof
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
