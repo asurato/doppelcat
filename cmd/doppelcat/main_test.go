@@ -13,3 +13,13 @@ func TestArgumentExitCodes(t *testing.T) {
 		t.Fatal("missing file accepted")
 	}
 }
+
+func TestAppVersionUsesBuildFlag(t *testing.T) {
+	previous := version
+	version = "v1.2.3"
+	t.Cleanup(func() { version = previous })
+
+	if got := appVersion(); got != "v1.2.3" {
+		t.Fatalf("appVersion() = %q", got)
+	}
+}

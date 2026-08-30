@@ -3,12 +3,26 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/asurato/doppelcat/internal/document"
 	"github.com/asurato/doppelcat/internal/ui"
 )
 
+// version can be set with -ldflags. When installed with `go install module@version`,
+// the module version embedded by Go is used instead.
 var version = "dev"
+
+func appVersion() string {
+	if version != "dev" {
+		return version
+	}
+	info, ok := debug.ReadBuildInfo()
+	if ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return version
+}
 
 const help = `Usage: doppelcat <file>
 
@@ -30,7 +44,7 @@ func run(args []string) int {
 		return 0
 	}
 	if len(args) == 1 && args[0] == "--version" {
-		fmt.Println(version)
+		fmt.Println(appVersion())
 		return 0
 	}
 	if len(args) != 1 {
