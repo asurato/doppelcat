@@ -1,4 +1,4 @@
-module doppelcat
+module github.com/asurato/doppelcat
 
 go 1.24.0
 

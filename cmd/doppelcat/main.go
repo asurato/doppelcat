@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"doppelcat/internal/document"
-	"doppelcat/internal/ui"
+	"github.com/asurato/doppelcat/internal/document"
+	"github.com/asurato/doppelcat/internal/ui"
 )
 
 var version = "dev"

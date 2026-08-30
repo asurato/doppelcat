@@ -4,8 +4,8 @@ import (
 	"errors"
 	"os"
 
-	"doppelcat/internal/diff"
-	"doppelcat/internal/document"
+	"github.com/asurato/doppelcat/internal/diff"
+	"github.com/asurato/doppelcat/internal/document"
 )
 
 type Mode int

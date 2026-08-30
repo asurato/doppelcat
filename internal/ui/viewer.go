@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"doppelcat/internal/diff"
+	"github.com/asurato/doppelcat/internal/diff"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/rivo/uniseg"

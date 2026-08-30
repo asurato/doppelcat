@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"doppelcat/internal/document"
-	"doppelcat/internal/model"
-	watcher "doppelcat/internal/watch"
+	"github.com/asurato/doppelcat/internal/document"
+	"github.com/asurato/doppelcat/internal/model"
+	watcher "github.com/asurato/doppelcat/internal/watch"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )

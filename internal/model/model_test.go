@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"doppelcat/internal/document"
+	"github.com/asurato/doppelcat/internal/document"
 )
 
 func load(t *testing.T, p string) document.Snapshot {

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"doppelcat/internal/diff"
+	"github.com/asurato/doppelcat/internal/diff"
 	"github.com/gdamore/tcell/v2"
 )
 

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"doppelcat/internal/document"
+	"github.com/asurato/doppelcat/internal/document"
 	"github.com/fsnotify/fsnotify"
 )
 

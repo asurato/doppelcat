@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"doppelcat/internal/diff"
+	"github.com/asurato/doppelcat/internal/diff"
 )
 
 var (
