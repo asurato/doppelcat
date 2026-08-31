@@ -14,7 +14,7 @@ on:
           - patch
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   prepare:
@@ -122,6 +122,8 @@ jobs:
       - prepare
       - build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
