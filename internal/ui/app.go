@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/asurato/doppelcat/internal/document"
 	"github.com/asurato/doppelcat/internal/model"
@@ -197,7 +198,11 @@ func (u *UI) showViewer() {
 }
 func (u *UI) leaveEdit() {
 	if u.model.Dirty {
-		u.choice("Unsaved changes", "Continue editing", func() {}, "Discard", func() { u.model.SetBuffer(u.model.Current.Text); u.model.Mode = model.Normal; u.showViewer() })
+		u.choiceWithKeys("Unsaved changes", map[rune]int{'s': 0, 'c': 1, 'd': 2}, 1,
+			"Save and close (s)", func() { u.save() },
+			"Continue editing (c / Esc)", func() {},
+			"Discard (d)", func() { u.model.SetBuffer(u.model.Current.Text); u.model.Mode = model.Normal; u.showViewer() },
+		)
 		return
 	}
 	u.model.Mode = model.Normal
@@ -284,6 +289,10 @@ func (u *UI) confirmQuit() {
 
 func (u *UI) confirm(text string, yes func()) { u.choice(text, "Confirm", yes, "Cancel", func() {}) }
 func (u *UI) choice(text string, args ...any) {
+	u.choiceWithKeys(text, nil, -1, args...)
+}
+
+func (u *UI) choiceWithKeys(text string, keys map[rune]int, escapeIndex int, args ...any) {
 	m := tview.NewModal().SetText(text)
 	labels := make([]string, 0, len(args)/2)
 	callbacks := make([]func(), 0, len(args)/2)
@@ -291,16 +300,37 @@ func (u *UI) choice(text string, args ...any) {
 		labels = append(labels, args[i].(string))
 		callbacks = append(callbacks, args[i+1].(func()))
 	}
-	m.AddButtons(labels).SetDoneFunc(func(_ int, label string) {
+	activate := func(index int) {
+		if index < 0 || index >= len(callbacks) {
+			return
+		}
 		u.pages.RemovePage("modal")
 		u.modal = false
+		callbacks[index]()
+		u.refresh()
+	}
+	m.AddButtons(labels).SetDoneFunc(func(_ int, label string) {
 		for i, l := range labels {
 			if l == label {
-				callbacks[i]()
+				activate(i)
 				break
 			}
 		}
-		u.refresh()
+	})
+	m.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		index := -1
+		if event.Key() == tcell.KeyEscape {
+			index = escapeIndex
+		} else if event.Key() == tcell.KeyRune {
+			if i, ok := keys[unicode.ToLower(event.Rune())]; ok {
+				index = i
+			}
+		}
+		if index >= 0 {
+			activate(index)
+			return nil
+		}
+		return event
 	})
 	u.modal = true
 	u.pages.AddPage("modal", m, true, true)
