@@ -139,6 +139,7 @@ jobs:
           TARGET: ${{ github.sha }}
         run: |
           gh release create "$VERSION" dist/* \
+            --repo "${{ github.repository }}" \
             --target "$TARGET" \
             --title "doppelcat $VERSION" \
             --generate-notes
