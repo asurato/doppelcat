@@ -183,3 +183,49 @@ func TestPlatformCursorKeyCentersEditorOnLinux(t *testing.T) {
 		t.Fatalf("Ctrl+L row offset = %d, want 15", rowOffset)
 	}
 }
+
+func TestStartEditKeepsViewerLine(t *testing.T) {
+	text := numberedLines(30)
+	snapshot, err := document.Decode([]byte(text))
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := New("test.txt", snapshot)
+	u.editor.SetRect(0, 0, 80, 10)
+	u.viewer.Move(14)
+
+	u.startEdit()
+
+	if got := u.editorLine(); got != 15 {
+		t.Fatalf("editor line = %d, want 15", got)
+	}
+	rowOffset, _ := u.editor.GetOffset()
+	if rowOffset != 14 {
+		t.Fatalf("editor row offset = %d, want 14", rowOffset)
+	}
+}
+
+func TestLeaveEditKeepsEditorLine(t *testing.T) {
+	text := numberedLines(30)
+	snapshot, err := document.Decode([]byte(text))
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := New("test.txt", snapshot)
+	u.startEdit()
+	u.seekEditorLine(18)
+
+	u.leaveEdit()
+
+	if got := u.viewer.TopLine(); got != 18 {
+		t.Fatalf("viewer top line = %d, want 18", got)
+	}
+}
+
+func numberedLines(count int) string {
+	var b strings.Builder
+	for i := 1; i <= count; i++ {
+		b.WriteString("line\n")
+	}
+	return b.String()
+}
