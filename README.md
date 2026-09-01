@@ -49,6 +49,13 @@ go build -o doppelcat ./cmd/doppelcat
 doppelcat path/to/document.md
 ```
 
+変更をまとめる待機時間は `--update-delay` でミリ秒単位の整数として指定できます。未指定時は `200`（200ミリ秒）です。補助的な変更チェックの間隔は変わりません。
+
+```console
+doppelcat --update-delay 500 path/to/document.md
+doppelcat --update-delay 2000 path/to/document.md
+```
+
 ```console
 doppelcat --help
 doppelcat --version
