@@ -1,12 +1,87 @@
 package ui
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/asurato/doppelcat/internal/document"
+	"github.com/asurato/doppelcat/internal/model"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
+
+func dirtyUI(t *testing.T) (*UI, string) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "document.txt")
+	if err := os.WriteFile(path, []byte("old"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := document.Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := New(path, snapshot)
+	u.startEdit()
+	u.editor.SetText("new", true)
+	return u, path
+}
+
+func pressModalKey(t *testing.T, u *UI, event *tcell.EventKey) {
+	t.Helper()
+	modal, ok := u.pages.GetPage("modal").(*tview.Modal)
+	if !ok {
+		t.Fatal("modal is not displayed")
+	}
+	modal.InputHandler()(event, func(tview.Primitive) {})
+}
+
+func TestLeaveEditDialogKeyboardShortcuts(t *testing.T) {
+	t.Run("save and close", func(t *testing.T) {
+		u, path := dirtyUI(t)
+		u.leaveEdit()
+		pressModalKey(t, u, tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModNone))
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(content) != "new" || u.model.Dirty || u.model.Mode == model.Edit || u.modal {
+			t.Fatalf("save shortcut did not save and close: content=%q dirty=%v mode=%v modal=%v", content, u.model.Dirty, u.model.Mode, u.modal)
+		}
+	})
+
+	t.Run("continue editing", func(t *testing.T) {
+		for name, event := range map[string]*tcell.EventKey{
+			"c":      tcell.NewEventKey(tcell.KeyRune, 'C', tcell.ModShift),
+			"escape": tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone),
+		} {
+			t.Run(name, func(t *testing.T) {
+				u, _ := dirtyUI(t)
+				u.leaveEdit()
+				pressModalKey(t, u, event)
+				if u.model.Mode != model.Edit || !u.model.Dirty || u.modal {
+					t.Fatalf("continue shortcut changed edits: dirty=%v mode=%v modal=%v", u.model.Dirty, u.model.Mode, u.modal)
+				}
+			})
+		}
+	})
+
+	t.Run("discard", func(t *testing.T) {
+		u, path := dirtyUI(t)
+		u.leaveEdit()
+		pressModalKey(t, u, tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(content) != "old" || u.model.Dirty || u.model.Mode != model.Normal || u.modal {
+			t.Fatalf("discard shortcut did not discard and close: content=%q dirty=%v mode=%v modal=%v", content, u.model.Dirty, u.model.Mode, u.modal)
+		}
+	})
+}
 
 func TestPlatformCursorKeyOnMacOS(t *testing.T) {
 	u := &UI{editor: tview.NewTextArea()}
