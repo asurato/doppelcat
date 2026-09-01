@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -84,6 +85,9 @@ func (u *UI) capture(e *tcell.EventKey) *tcell.EventKey {
 		return e
 	}
 	if u.model.Mode == model.Edit {
+		if event, handled := u.platformEditorKey(e, runtime.GOOS); handled {
+			return event
+		}
 		switch e.Key() {
 		case tcell.KeyCtrlS:
 			u.save()
@@ -125,6 +129,50 @@ func (u *UI) capture(e *tcell.EventKey) *tcell.EventKey {
 		return nil
 	}
 	return e
+}
+
+func (u *UI) platformEditorKey(e *tcell.EventKey, goos string) (*tcell.EventKey, bool) {
+	if e.Key() == tcell.KeyCtrlL {
+		if goos == "darwin" || goos == "linux" {
+			u.centerEditorCursor()
+			return nil, true
+		}
+		if goos == "windows" {
+			return nil, true
+		}
+		return e, false
+	}
+
+	keys := map[tcell.Key]tcell.Key{
+		tcell.KeyCtrlA: tcell.KeyHome,
+		tcell.KeyCtrlB: tcell.KeyLeft,
+		tcell.KeyCtrlE: tcell.KeyEnd,
+		tcell.KeyCtrlF: tcell.KeyRight,
+		tcell.KeyCtrlN: tcell.KeyDown,
+		tcell.KeyCtrlP: tcell.KeyUp,
+	}
+	target, ok := keys[e.Key()]
+	if !ok {
+		return e, false
+	}
+	if goos == "darwin" || goos == "linux" {
+		return tcell.NewEventKey(target, 0, tcell.ModNone), true
+	}
+	if goos == "windows" {
+		return nil, true
+	}
+	return e, false
+}
+
+func (u *UI) centerEditorCursor() {
+	fromRow, _, toRow, _ := u.editor.GetCursor()
+	_, _, _, height := u.editor.GetInnerRect()
+	rowOffset := (fromRow+toRow)/2 - height/2
+	if rowOffset < 0 {
+		rowOffset = 0
+	}
+	_, columnOffset := u.editor.GetOffset()
+	u.editor.SetOffset(rowOffset, columnOffset)
 }
 
 func (u *UI) startEdit() {

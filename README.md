@@ -78,8 +78,14 @@ UTF-8として不正なファイル、NULを含むファイル、ディレクト
 | `Ctrl+C` / `Ctrl+X` / `Ctrl+V` | コピー / 切り取り / 貼り付け |
 | `Ctrl+Z` / `Ctrl+Y` | Undo / Redo |
 | `Ctrl+S` | 保存 |
+| `Ctrl+A` / `Ctrl+E` | macOS/Linux: `Home` / `End` と同じカーソル移動 |
+| `Ctrl+B` / `Ctrl+F` | macOS/Linux: `←` / `→` と同じカーソル移動 |
+| `Ctrl+N` / `Ctrl+P` | macOS/Linux: `↓` / `↑` と同じカーソル移動 |
+| `Ctrl+L` | macOS/Linux: カーソル位置を表示中央へ移動 |
 | `Esc` | 編集を終了 |
 | `Ctrl+Q` | 終了確認 |
+
+Unix系のカーソル移動キーと `Ctrl+L` はWindowsでは無効です。
 
 競合中は `c` で解決ダイアログを再表示できます。外部版の再読込またはローカル版での上書きには最終確認があります。
 
