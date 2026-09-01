@@ -60,7 +60,7 @@ func New(path string, initial document.Snapshot) *UI {
 	u.editor.SetWordWrap(false)
 	u.status.SetDynamicColors(true).SetWrap(false)
 	u.content = tview.NewPages().AddPage("viewer", u.viewer, true, true).AddPage("editor", u.editor, true, false)
-	u.body = tview.NewFlex().SetDirection(tview.FlexRow).AddItem(u.content, 0, 1, true).AddItem(u.status, 1, 0, false)
+	u.body = tview.NewFlex().SetDirection(tview.FlexRow).AddItem(u.content, 0, 1, true).AddItem(u.status, 2, 0, false)
 	u.pages = tview.NewPages().AddPage("main", u.body, true, true)
 	u.app.SetRoot(u.pages, true).EnablePaste(true)
 	u.viewer.SetNormal(initial.Text)
@@ -228,7 +228,7 @@ func (u *UI) save() {
 		u.refresh()
 		return
 	}
-	u.transient = "saved"
+	u.transient = ""
 	u.showViewerAt(line)
 }
 
@@ -378,31 +378,18 @@ func (u *UI) choiceWithKeys(text string, keys map[rune]int, escapeIndex int, arg
 
 func (u *UI) refresh() {
 	modeName := map[model.Mode]string{model.Normal: "VIEW", model.Diff: "DIFF", model.Edit: "EDIT"}[u.model.Mode]
-	flags := []string{}
-	if u.model.Dirty {
-		flags = append(flags, "[yellow]UNSAVED[-]")
+	guide := "d Diff  e Edit  q Quit"
+	if u.model.Mode == model.Diff {
+		guide = "d View  e Edit  q Quit"
+	} else if u.model.Mode == model.Edit {
+		guide = "Ctrl+S Save  Esc View  Ctrl+Q Quit"
 	}
-	if u.model.Conflict {
-		flags = append(flags, "[red]CONFLICT[-]")
-	}
-	if u.model.Availability == model.Unavailable {
-		flags = append(flags, "[red]UNAVAILABLE[-]")
-	}
-	line := u.viewer.TopLine()
-	if u.model.Mode == model.Edit {
-		r, _, _, _ := u.editor.GetCursor()
-		line = r + 1
-	}
-	keys := "↑↓ Ctrl+Home/End d e q Ctrl+Q"
-	if u.model.Mode == model.Edit {
-		keys = "arrows Home/End Shift-select Ctrl+C/X/V/Z/Y/S Esc Ctrl+Q"
-	}
-	if u.model.Conflict {
-		keys += " c:resolve"
-	}
-	errText := u.transient
+	message := u.transient
 	if u.model.StatusError != nil {
-		errText = u.model.StatusError.Error()
+		message = u.model.StatusError.Error()
 	}
-	u.status.SetText(fmt.Sprintf(" %s | %s | line %d | %s | %s | %s", tview.Escape(filepath.Clean(u.model.Path)), modeName, line, strings.Join(flags, " "), tview.Escape(errText), keys))
+	if message != "" {
+		guide = message
+	}
+	u.status.SetText(fmt.Sprintf(" %s  %s\n %s", modeName, tview.Escape(filepath.Clean(u.model.Path)), tview.Escape(guide)))
 }
