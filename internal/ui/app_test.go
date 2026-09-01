@@ -222,6 +222,45 @@ func TestLeaveEditKeepsEditorLine(t *testing.T) {
 	}
 }
 
+func TestFooterShowsModePathAndContextualGuide(t *testing.T) {
+	snapshot, err := document.Decode([]byte("text"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := New("test.txt", snapshot)
+	u.transient = ""
+	u.refresh()
+
+	if got, want := u.status.GetText(true), " VIEW  test.txt\n d Diff  e Edit  q Quit"; got != want {
+		t.Fatalf("view footer = %q, want %q", got, want)
+	}
+
+	u.model.Mode = model.Diff
+	u.refresh()
+	if got, want := u.status.GetText(true), " DIFF  test.txt\n d View  e Edit  q Quit"; got != want {
+		t.Fatalf("diff footer = %q, want %q", got, want)
+	}
+
+	u.startEdit()
+	if got, want := u.status.GetText(true), " EDIT  test.txt\n Ctrl+S Save  Esc View  Ctrl+Q Quit"; got != want {
+		t.Fatalf("edit footer = %q, want %q", got, want)
+	}
+}
+
+func TestFooterMessageReplacesGuide(t *testing.T) {
+	snapshot, err := document.Decode([]byte("text"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := New("test.txt", snapshot)
+	u.transient = "clipboard unavailable"
+	u.refresh()
+
+	if got, want := u.status.GetText(true), " VIEW  test.txt\n clipboard unavailable"; got != want {
+		t.Fatalf("message footer = %q, want %q", got, want)
+	}
+}
+
 func numberedLines(count int) string {
 	var b strings.Builder
 	for i := 1; i <= count; i++ {
