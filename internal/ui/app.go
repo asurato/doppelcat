@@ -32,8 +32,14 @@ type UI struct {
 	modal     bool
 }
 
+const DefaultDebounce = 200 * time.Millisecond
+
 func Run(path string, initial document.Snapshot) error {
-	u := New(path, initial)
+	return RunWithDebounce(path, initial, DefaultDebounce)
+}
+
+func RunWithDebounce(path string, initial document.Snapshot, debounce time.Duration) error {
+	u := NewWithDebounce(path, initial, debounce)
 	ctx, cancel := context.WithCancel(context.Background())
 	u.cancel = cancel
 	if err := u.watcher.Start(ctx); err != nil {
@@ -52,7 +58,11 @@ func Run(path string, initial document.Snapshot) error {
 }
 
 func New(path string, initial document.Snapshot) *UI {
-	u := &UI{app: tview.NewApplication(), viewer: NewViewer(), editor: tview.NewTextArea(), status: tview.NewTextView(), model: model.New(path, initial), watcher: watcher.New(path, 200*time.Millisecond, 250*time.Millisecond)}
+	return NewWithDebounce(path, initial, DefaultDebounce)
+}
+
+func NewWithDebounce(path string, initial document.Snapshot, debounce time.Duration) *UI {
+	u := &UI{app: tview.NewApplication(), viewer: NewViewer(), editor: tview.NewTextArea(), status: tview.NewTextView(), model: model.New(path, initial), watcher: watcher.New(path, debounce, 250*time.Millisecond)}
 	u.viewer.SetBorder(true).SetTitle(" doppelcat ")
 	u.editor.SetBorder(true).SetTitle(" EDIT ")
 	u.editor.SetText(initial.Text, false)
