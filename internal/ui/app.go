@@ -180,35 +180,45 @@ func (u *UI) startEdit() {
 	if u.model.Availability != model.Available {
 		return
 	}
+	line := u.viewer.TopLine()
 	u.model.EnterEdit()
 	u.editor.SetText(u.model.Buffer, false)
+	u.seekEditorLine(line)
 	u.content.SwitchToPage("editor")
 	u.app.SetFocus(u.editor)
 	u.refresh()
 }
 func (u *UI) showViewer() {
+	u.showViewerAt(0)
+}
+func (u *UI) showViewerAt(line int) {
 	u.content.SwitchToPage("viewer")
 	if u.model.Mode == model.Diff {
 		u.viewer.SetDiff(u.model.DiffLines)
 	} else {
 		u.viewer.SetNormal(u.model.Current.Text)
 	}
+	if line > 0 {
+		u.viewer.seek(line)
+	}
 	u.app.SetFocus(u.viewer)
 	u.refresh()
 }
 func (u *UI) leaveEdit() {
+	line := u.editorLine()
 	if u.model.Dirty {
 		u.choiceWithKeys("Unsaved changes", map[rune]int{'s': 0, 'c': 1, 'd': 2}, 1,
 			"Save and close (s)", func() { u.save() },
 			"Continue editing (c / Esc)", func() {},
-			"Discard (d)", func() { u.model.SetBuffer(u.model.Current.Text); u.model.Mode = model.Normal; u.showViewer() },
+			"Discard (d)", func() { u.model.SetBuffer(u.model.Current.Text); u.model.Mode = model.Normal; u.showViewerAt(line) },
 		)
 		return
 	}
 	u.model.Mode = model.Normal
-	u.showViewer()
+	u.showViewerAt(line)
 }
 func (u *UI) save() {
+	line := u.editorLine()
 	u.model.SetBuffer(u.editor.GetText())
 	if err := u.model.Save(); err != nil {
 		u.transient = "save failed: " + err.Error()
@@ -219,7 +229,36 @@ func (u *UI) save() {
 		return
 	}
 	u.transient = "saved"
-	u.showViewer()
+	u.showViewerAt(line)
+}
+
+func (u *UI) seekEditorLine(line int) {
+	text := u.editor.GetText()
+	index := 0
+	for current := 1; current < line; current++ {
+		next := strings.IndexByte(text[index:], '\n')
+		if next < 0 {
+			index = len(text)
+			break
+		}
+		index += next + 1
+	}
+	u.editor.Select(index, index)
+	row, _, _, _ := u.editor.GetCursor()
+	logicalRow := strings.Count(text[:index], "\n")
+	if row < logicalRow {
+		row = logicalRow
+	}
+	u.editor.SetOffset(row, 0)
+}
+
+func (u *UI) editorLine() int {
+	text := u.editor.GetText()
+	_, index, _ := u.editor.GetSelection()
+	if index > len(text) {
+		index = len(text)
+	}
+	return strings.Count(text[:index], "\n") + 1
 }
 
 func (u *UI) onWatch(ev watcher.Result) {
